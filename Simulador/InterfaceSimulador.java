@@ -54,7 +54,7 @@ public class InterfaceSimulador {
         JPanel painelCentral = new JPanel();
         painelCentral.setBorder(BorderFactory.createTitledBorder("Etapas do Pipeline"));
 
-        // Método para criar as etapas (escalar ou superescalar)
+        // Métodos para criar as etapas (escalar ou superescalar)
         Runnable criarEtapasEscalar = () -> {
             painelCentral.removeAll();
             painelCentral.setLayout(new GridLayout(1, 5));
@@ -118,7 +118,102 @@ public class InterfaceSimulador {
 
         janela.add(painelInferior, BorderLayout.SOUTH);
 
-        // Exibe a interface
+        // Variáveis para controle do estado da simulação
+        boolean[] simulacaoAtiva = {false}; // Flag para controlar se a simulação está ativa
+        boolean[] pausado = {false}; // Flag para verificar se está pausado
+        Timer[] timer = {null}; // Timer para animação, agora como variável para controle
+
+        // Métodos para fazer animação da instrução
+        Runnable animarInstrucaoEscalar = new Runnable() {
+            int etapaAtual = 0; // Começa no Fetch
+            public void run() {
+                if (simulacaoAtiva[0] && !pausado[0]) {
+                    // Recorre pelas etapas e anima a instrução
+                    if (timer[0] != null) {
+                        timer[0].stop(); // Para a animação anterior, se existir
+                    }
+                    timer[0] = new Timer(1000, e -> {
+                        if (etapaAtual < 5) {
+                            JPanel etapaPainel = (JPanel) painelCentral.getComponent(etapaAtual);
+                            etapaPainel.setBackground(Color.CYAN); // Marca a etapa atual com cor
+                            if (etapaAtual > 0) {
+                                JPanel painelAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
+                                painelAnterior.setBackground(null); // Remove a cor da etapa anterior
+                            }
+                            etapaAtual++;
+                        } else {
+                            timer[0].stop(); // Para a animação
+                        }
+                    });
+                    timer[0].start();
+                }
+            }
+        };
+
+        Runnable animarInstrucaoSuperscalar = new Runnable() {
+            int linhaAtual = 0; // Começa na linha 0
+            int colunaAtual = 0; // Começa na coluna 0
+            public void run() {
+                if (simulacaoAtiva[0] && !pausado[0]) {
+                    // Animação da instrução no superescalar
+                    if (timer[0] != null) {
+                        timer[0].stop(); // Para a animação anterior, se existir
+                    }
+                    timer[0] = new Timer(1000, e -> {
+                        if (linhaAtual < 6 && colunaAtual < 5) {
+                            JPanel celula = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent(linhaAtual * 5 + colunaAtual);
+                            celula.setBackground(Color.CYAN); // Marca a célula atual
+                            if (colunaAtual > 0 || linhaAtual > 0) {
+                                JPanel painelAnterior = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent((linhaAtual) * 5 + (colunaAtual - 1));
+                                painelAnterior.setBackground(null); // Remove a cor da célula anterior
+                            }
+                            colunaAtual++;
+                            if (colunaAtual >= 5) {
+                                colunaAtual = 0;
+                                linhaAtual++;
+                            }
+                        } else {
+                            timer[0].stop(); // Para a animação
+                        }
+                    });
+                    timer[0].start();
+                }
+            }
+        };
+
+        // Métodos para controlar a simulação
+        Runnable iniciarSimulacao = () -> {
+            simulacaoAtiva[0] = true;
+            pausado[0] = false;
+            if (escalarButton.isSelected()) {
+                animarInstrucaoEscalar.run();
+            } else if (superescalarButton.isSelected()) {
+                animarInstrucaoSuperscalar.run();
+            }
+        };
+
+        Runnable pausarSimulacao = () -> {
+            pausado[0] = true;
+            if (timer[0] != null) {
+                timer[0].stop(); // Interrompe a animação ao pausar
+            }
+        };
+
+        Runnable continuarSimulacao = () -> {
+            pausado[0] = false;
+            if (escalarButton.isSelected()) {
+                animarInstrucaoEscalar.run();
+            } else if (superescalarButton.isSelected()) {
+                animarInstrucaoSuperscalar.run();
+            }
+        };
+
+        // Ações dos botões de controle
+        iniciarButton.addActionListener(e -> iniciarSimulacao.run());
+        pausarButton.addActionListener(e -> pausarSimulacao.run());
+        continuarButton.addActionListener(e -> continuarSimulacao.run());
+
+        // Exibindo a janela
         janela.setVisible(true);
     }
 }
