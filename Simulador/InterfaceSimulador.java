@@ -39,14 +39,14 @@ public class InterfaceSimulador {
         painelEsquerdo.setBorder(BorderFactory.createTitledBorder("Arquitetura"));
 
         JRadioButton escalarButton = new JRadioButton("Escalar", true); // Pré-selecionado
-        JRadioButton superscalarButton = new JRadioButton("Superscalar");
+        JRadioButton superescalarButton = new JRadioButton("Superescalar");
 
-        ButtonGroup groupoArquitetura = new ButtonGroup();
-        groupoArquitetura.add(escalarButton);
-        groupoArquitetura.add(superscalarButton);
+        ButtonGroup grupoArquitetura = new ButtonGroup();
+        grupoArquitetura.add(escalarButton);
+        grupoArquitetura.add(superescalarButton);
 
         painelEsquerdo.add(escalarButton);
-        painelEsquerdo.add(superscalarButton);
+        painelEsquerdo.add(superescalarButton);
 
         janela.add(painelEsquerdo, BorderLayout.WEST);
 
@@ -69,7 +69,7 @@ public class InterfaceSimulador {
             painelCentral.repaint();
         };
 
-        Runnable criarEtapasSuperscalar = () -> {
+        Runnable criarEtapasSuperescalar = () -> {
             painelCentral.removeAll();
             painelCentral.setLayout(new BorderLayout());
 
@@ -83,13 +83,13 @@ public class InterfaceSimulador {
             painelCentral.add(painelTitulos, BorderLayout.NORTH);
 
             // Células com bordas visíveis
-            JPanel painelCélulas = new JPanel(new GridLayout(6, 5)); // 6 linhas para superscalar
+            JPanel painelCelulas = new JPanel(new GridLayout(6, 5)); // 6 linhas para superescalar
             for (int i = 0; i < 6 * 5; i++) { // 6 linhas, 5 colunas
                 JPanel celula = new JPanel();
                 celula.setBorder(new LineBorder(Color.BLACK)); // Adiciona borda preta às células
-                painelCélulas.add(celula);
+                painelCelulas.add(celula);
             }
-            painelCentral.add(painelCélulas, BorderLayout.CENTER);
+            painelCentral.add(painelCelulas, BorderLayout.CENTER);
 
             painelCentral.revalidate();
             painelCentral.repaint();
@@ -97,11 +97,26 @@ public class InterfaceSimulador {
 
         // Adicionar ActionListeners aos botões de arquitetura
         escalarButton.addActionListener(e -> criarEtapasEscalar.run());
-        superscalarButton.addActionListener(e -> criarEtapasSuperscalar.run());
+        superescalarButton.addActionListener(e -> criarEtapasSuperescalar.run());
 
         // Adicionar painel central na janela
         criarEtapasEscalar.run(); // Inicializa como escalar
         janela.add(painelCentral, BorderLayout.CENTER);
+
+        // Painel inferior com controle da simulação
+        JPanel painelInferior = new JPanel();
+        painelInferior.setLayout(new FlowLayout());
+        painelInferior.setBorder(BorderFactory.createTitledBorder("Controlar Simulação"));
+
+        JButton iniciarButton = new JButton("Iniciar");
+        JButton pausarButton = new JButton("Pausar");
+        JButton continuarButton = new JButton("Continuar");
+
+        painelInferior.add(iniciarButton);
+        painelInferior.add(pausarButton);
+        painelInferior.add(continuarButton);
+
+        janela.add(painelInferior, BorderLayout.SOUTH);
 
         // Exibe a interface
         janela.setVisible(true);
