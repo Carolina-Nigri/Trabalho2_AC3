@@ -93,13 +93,12 @@ public class InterfaceSimulador {
         painel.setBorder(BorderFactory.createTitledBorder("Controlar Simulação"));
 
         JButton iniciarButton = new JButton("Iniciar");
-        iniciarButton.addActionListener(e -> controlarSimulacao("iniciar"));
-
         JButton pausarButton = new JButton("Pausar");
-        pausarButton.addActionListener(e -> controlarSimulacao("pausar"));
-
         JButton continuarButton = new JButton("Continuar");
-        continuarButton.addActionListener(e -> controlarSimulacao("continuar"));
+        
+        iniciarButton.addActionListener(e -> controlarSimulacao('I'));
+        pausarButton.addActionListener(e -> controlarSimulacao('P'));
+        continuarButton.addActionListener(e -> controlarSimulacao('C'));
 
         painel.add(iniciarButton);
         painel.add(pausarButton);
@@ -153,12 +152,11 @@ public class InterfaceSimulador {
         painelCentral.repaint();
     }
 
-    private void controlarSimulacao(String comando) {
-        if (comando.equals("pausar") && animacaoTimer != null) {
+    private void controlarSimulacao(char comando) {
+        if (comando == 'P' && animacaoTimer != null) {
             animacaoTimer.stop();
         } else{
-            if(comando.equals("iniciar")) recomeca = true;
-            else if(comando.equals("continuar")) recomeca = false;
+            recomeca = (comando == 'I'); // true se comando for iniciar e false se for continuar
 
             if (escalarButton.isSelected()) {
                 executarAnimacaoEscalar();
@@ -168,14 +166,42 @@ public class InterfaceSimulador {
         }
     }
 
+    private void removePainelAnterior() {
+        JPanel painelAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
+        painelAnterior.removeAll(); // Remove o quadrado da última etapa
+        painelAnterior.repaint();
+    }
+
+    private void removeCelulaAnterior() {
+        int indiceAnterior = linhaAtual * 5 + (colunaAtual - 1);
+        if (colunaAtual == 0 && linhaAtual > 0) { // Caso especial: mudança de linha
+            indiceAnterior = (linhaAtual - 1) * 5 + 4;
+        }
+        JPanel painelCelulas = (JPanel) painelCentral.getComponent(1);
+        JPanel celulaAnterior = (JPanel) painelCelulas.getComponent(indiceAnterior);
+        celulaAnterior.removeAll();
+        celulaAnterior.repaint();
+    }
+
+    private JPanel criaPainelInstrucao(String label) {
+        JPanel painelInstrucao = new JPanel(new GridBagLayout());
+        painelInstrucao.setBackground(Color.CYAN);
+        painelInstrucao.setPreferredSize(new Dimension(70, 70));
+        painelInstrucao.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        JLabel nomeInstrucao = new JLabel(label);
+        nomeInstrucao.setFont(new Font("Arial", Font.BOLD, 15));
+        painelInstrucao.add(nomeInstrucao); // Adiciona o texto ao painel
+
+        return painelInstrucao;
+    }
+
     private void executarAnimacaoEscalar() {
         if (animacaoTimer != null) {
             animacaoTimer.stop();
         }
         if (recomeca && etapaAtual != 0) {
-            JPanel painelAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
-            painelAnterior.removeAll(); // Remove o quadrado da última etapa
-            painelAnterior.repaint();
+            removePainelAnterior();
             etapaAtual = 0;
         }
 
@@ -184,31 +210,18 @@ public class InterfaceSimulador {
                 JPanel painelEtapa = (JPanel) painelCentral.getComponent(etapaAtual);
                 painelEtapa.removeAll(); // Limpa a etapa antes de adicionar um novo quadrado
                 
-                JPanel instrucaoPanel = new JPanel(new GridBagLayout());
-                instrucaoPanel.setBackground(Color.CYAN);
-                instrucaoPanel.setPreferredSize(new Dimension(70, 70));
-                instrucaoPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-
-                JLabel nomeInstrucao = new JLabel("ADD");
-                nomeInstrucao.setFont(new Font("Arial", Font.BOLD, 15));
-                instrucaoPanel.add(nomeInstrucao); // Adiciona o texto ao painel
-                instrucaoPanel.add(nomeInstrucao);
-
-                painelEtapa.add(instrucaoPanel);
+                JPanel painelInstrucao = criaPainelInstrucao("ADD");
+                painelEtapa.add(painelInstrucao);
                 painelEtapa.revalidate();
                 painelEtapa.repaint();
 
                 if (etapaAtual > 0) {
-                    JPanel painelAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
-                    painelAnterior.removeAll(); // Remove o quadrado da etapa anterior
-                    painelAnterior.repaint();
+                    removePainelAnterior();
                 }
                 etapaAtual++;
             } else {
                 animacaoTimer.stop();
-                JPanel painelAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
-                painelAnterior.removeAll(); // Remove o quadrado da última etapa
-                painelAnterior.repaint();
+                removePainelAnterior();
             }
         });
 
@@ -220,46 +233,28 @@ public class InterfaceSimulador {
             animacaoTimer.stop();
         }
         if (recomeca && !(linhaAtual == 0 && colunaAtual == 0)) {
-            int indiceAnterior = linhaAtual * 5 + (colunaAtual - 1);
-            if (colunaAtual == 0 && linhaAtual > 0) { // Caso especial: mudança de linha
-                indiceAnterior = (linhaAtual - 1) * 5 + 4;
-            }
-            JPanel painelCelulas = (JPanel) painelCentral.getComponent(1);
-            JPanel celulaAnterior = (JPanel) painelCelulas.getComponent(indiceAnterior);
-            celulaAnterior.removeAll();
-            celulaAnterior.setBackground(null);
-            celulaAnterior.repaint();
-            
+            removeCelulaAnterior();
             linhaAtual = 0;
             colunaAtual = 0;
         }
-
+    
         animacaoTimer = new Timer(1000, e -> {
             JPanel painelCelulas = (JPanel) painelCentral.getComponent(1);
-
+    
             if (linhaAtual < 6 && colunaAtual < 5) {
-                // Destaca a célula atual
+                // Atualiza a célula atual com o quadrado e a instrução
                 JPanel celulaAtual = (JPanel) painelCelulas.getComponent(linhaAtual * 5 + colunaAtual);
-                celulaAtual.setBackground(Color.CYAN); // Cor de destaque
+                celulaAtual.removeAll();
                 celulaAtual.setLayout(new GridBagLayout());
-
-                // Adiciona um rótulo com a instrução "ADD"
-                JLabel labelInstrucao = new JLabel("ADD");
-                labelInstrucao.setFont(new Font("Arial", Font.BOLD, 12));
-                celulaAtual.add(labelInstrucao);
-
-                // Remove o destaque da célula anterior, se aplicável
+    
+                JPanel painelInstrucao = criaPainelInstrucao("ADD"); // Substitua "ADD" por outras instruções se necessário
+                celulaAtual.add(painelInstrucao);
+    
+                // Remove o quadrado da célula anterior, se aplicável
                 if (colunaAtual > 0 || linhaAtual > 0) {
-                    int indiceAnterior = linhaAtual * 5 + (colunaAtual - 1);
-                    if (colunaAtual == 0 && linhaAtual > 0) { // Caso especial: mudança de linha
-                        indiceAnterior = (linhaAtual - 1) * 5 + 4;
-                    }
-                    JPanel celulaAnterior = (JPanel) painelCelulas.getComponent(indiceAnterior);
-                    celulaAnterior.removeAll();
-                    celulaAnterior.setBackground(null);
-                    celulaAnterior.repaint();
+                    removeCelulaAnterior();
                 }
-
+    
                 colunaAtual++;
                 if (colunaAtual >= 5) { // Avança para a próxima linha
                     colunaAtual = 0;
@@ -267,23 +262,14 @@ public class InterfaceSimulador {
                 }
             } else {
                 animacaoTimer.stop();
-
-                int indiceAnterior = linhaAtual * 5 + (colunaAtual - 1);
-                if (colunaAtual == 0 && linhaAtual > 0) { // Caso especial: mudança de linha
-                    indiceAnterior = (linhaAtual - 1) * 5 + 4;
-                }
-                JPanel celulaAnterior = (JPanel) painelCelulas.getComponent(indiceAnterior);
-                celulaAnterior.removeAll();
-                celulaAnterior.setBackground(null);
-                celulaAnterior.repaint();
-                
+                removeCelulaAnterior();
                 linhaAtual = 0;
                 colunaAtual = 0;
             }
-                painelCelulas.revalidate();
-                painelCelulas.repaint();
+            painelCelulas.revalidate();
+            painelCelulas.repaint();
         });
-
+    
         animacaoTimer.start();
-    }
+    }    
 }
