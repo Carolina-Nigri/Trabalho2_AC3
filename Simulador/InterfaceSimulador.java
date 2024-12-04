@@ -121,6 +121,7 @@ public class InterfaceSimulador {
         // Variáveis para controle do estado da simulação
         boolean[] simulacaoAtiva = {false}; // Flag para controlar se a simulação está ativa
         boolean[] pausado = {false}; // Flag para verificar se está pausado
+        boolean[] recomeca = {false}; // Flag para verificar se é pra recomeçar
         Timer[] timer = {null}; // Timer para animação, agora como variável para controle
 
         // Métodos para fazer animação da instrução
@@ -132,17 +133,24 @@ public class InterfaceSimulador {
                     if (timer[0] != null) {
                         timer[0].stop(); // Para a animação anterior, se existir
                     }
+                    if(recomeca[0] && etapaAtual > 0){ // Reinicia a animação desde o início
+                        JPanel celulaAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
+                        celulaAnterior.setBackground(null); // Remove a cor da etapa anterior
+                        etapaAtual = 0; 
+                    } 
                     timer[0] = new Timer(1000, e -> {
                         if (etapaAtual < 5) {
-                            JPanel etapaPainel = (JPanel) painelCentral.getComponent(etapaAtual);
-                            etapaPainel.setBackground(Color.CYAN); // Marca a etapa atual com cor
+                            JPanel celulaAtual = (JPanel) painelCentral.getComponent(etapaAtual);
+                            celulaAtual.setBackground(Color.CYAN); // Marca a etapa atual com cor
                             if (etapaAtual > 0) {
-                                JPanel painelAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
-                                painelAnterior.setBackground(null); // Remove a cor da etapa anterior
+                                JPanel celulaAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
+                                celulaAnterior.setBackground(null); // Remove a cor da etapa anterior
                             }
                             etapaAtual++;
                         } else {
                             timer[0].stop(); // Para a animação
+                            JPanel celulaAnterior = (JPanel) painelCentral.getComponent(etapaAtual - 1);
+                            celulaAnterior.setBackground(null); // Remove a cor da etapa anterior
                         }
                     });
                     timer[0].start();
@@ -159,13 +167,19 @@ public class InterfaceSimulador {
                     if (timer[0] != null) {
                         timer[0].stop(); // Para a animação anterior, se existir
                     }
+                    if(recomeca[0] && !(linhaAtual == 0 && colunaAtual == 0)){ // Reinicia a animação desde o início
+                        JPanel celulaAnterior = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent((linhaAtual) * 5 + (colunaAtual - 1));
+                        celulaAnterior.setBackground(null); // Remove a cor da célula anterior
+                        linhaAtual = 0; 
+                        colunaAtual = 0;
+                    }
                     timer[0] = new Timer(1000, e -> {
                         if (linhaAtual < 6 && colunaAtual < 5) {
-                            JPanel celula = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent(linhaAtual * 5 + colunaAtual);
-                            celula.setBackground(Color.CYAN); // Marca a célula atual
+                            JPanel celulaAtual = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent(linhaAtual * 5 + colunaAtual);
+                            celulaAtual.setBackground(Color.CYAN); // Marca a célula atual
                             if (colunaAtual > 0 || linhaAtual > 0) {
-                                JPanel painelAnterior = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent((linhaAtual) * 5 + (colunaAtual - 1));
-                                painelAnterior.setBackground(null); // Remove a cor da célula anterior
+                                JPanel celulaAnterior = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent((linhaAtual) * 5 + (colunaAtual - 1));
+                                celulaAnterior.setBackground(null); // Remove a cor da célula anterior
                             }
                             colunaAtual++;
                             if (colunaAtual >= 5) {
@@ -174,6 +188,8 @@ public class InterfaceSimulador {
                             }
                         } else {
                             timer[0].stop(); // Para a animação
+                            JPanel celulaAnterior = (JPanel) ((JPanel) painelCentral.getComponent(1)).getComponent((linhaAtual) * 5 + (colunaAtual - 1));
+                            celulaAnterior.setBackground(null); // Remove a cor da célula anterior
                         }
                     });
                     timer[0].start();
@@ -183,6 +199,7 @@ public class InterfaceSimulador {
 
         // Métodos para controlar a simulação
         Runnable iniciarSimulacao = () -> {
+            recomeca[0] = true;
             simulacaoAtiva[0] = true;
             pausado[0] = false;
             if (escalarButton.isSelected()) {
@@ -201,6 +218,7 @@ public class InterfaceSimulador {
 
         Runnable continuarSimulacao = () -> {
             pausado[0] = false;
+            recomeca[0] = false;
             if (escalarButton.isSelected()) {
                 animarInstrucaoEscalar.run();
             } else if (superescalarButton.isSelected()) {
